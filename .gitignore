@@ -1,0 +1,14 @@
+# Dependencias de Node
+node_modules/
+
+# Variables de entorno (Contraseñas, API Keys de Mongo e IA)
+.env
+.env.local
+
+# Archivos de producción de React
+dist/
+build/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
