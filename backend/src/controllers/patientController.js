@@ -1,34 +1,28 @@
 import { patientData } from '../data/patientData.js';
-/*MOTIVO DE IMPLEMENTACION 
-La petición del paciente debería pasar por 
-Ruta → Middleware 
-→ Controller → Service (NutritionFacade o un servicio específico) 
-→ Data → Base de Datos.
- La idea es que el Controller no contenga lógica de negocio
-  y que esta quede centralizada en la capa Service.(nutritionFacade)*/ 
+import nutritionFacade from '../services/NutritionFacade.js'; // ajustar ruta según estructura
+
 /**
  * POST /api/patients
  * Registra un nuevo paciente en el sistema.
  */
-export const createPatient = async (req, res) => { // controlador en si 
+export const createPatient = async (req, res) => {
   try {
-    const { firstName, //datos enviados del front
-        lastName, 
-        birthDate, 
+    const { firstName,
+        lastName,
+        birthDate,
         gender,
-        guardian, 
-        observations 
+        guardian,
+        observations
     } = req.body;
-    const patient = await patientData.save({ firstName, 
-        lastName, 
-        birthDate, 
-        gender, 
-        guardian, 
-        observations });
-     // controllador no guarda datos, le pide a data que lo haga patientData.js 
-    // (patienteData.save) y  luego devuelve la respuesta al front
 
-    return res.status(201).json({ success: true, data: patient });   
+    const patient = await patientData.save({ firstName,
+        lastName,
+        birthDate,
+        gender,
+        guardian,
+        observations });
+
+    return res.status(201).json({ success: true, data: patient });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }
@@ -69,11 +63,50 @@ export const getPatientById = async (req, res) => {
  */
 export const updatePatient = async (req, res) => {
   try {
-    const updated = await patientData.updateById(req.params.id, req.body);
+    const { firstName,
+        lastName,
+        birthDate,
+        gender,
+        guardian,
+        observations
+    } = req.body; // desestructurado para no pasar campos extra a Mongoose
+
+    const updated = await patientData.updateById(req.params.id, {
+        firstName,
+        lastName,
+        birthDate,
+        gender,
+        guardian,
+        observations
+    });
+
     if (!updated) {
       return res.status(404).json({ success: false, message: 'Paciente no encontrado.' });
     }
     return res.status(200).json({ success: true, data: updated });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * POST /api/patients/:id/assessment
+ * Ejecuta una evaluación nutricional para el paciente.
+ * createAssessment recibe el id del paciente desde la URL y weight y height del body, 
+ * se los pasa a nutritionFacade.executeAssessment(), y devuelve el resultado al front. 
+ * El controller no procesa nada, solo conecta la petición HTTP con la facade.
+ */
+export const createAssessment = async (req, res) => {
+  try {
+    const { weight, height } = req.body;
+
+    const result = await nutritionFacade.executeAssessment(
+      req.params.id,
+      weight,
+      height
+    );
+
+    return res.status(201).json(result);
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }
