@@ -1,3 +1,4 @@
+// frontend/app/login.js
 import { useState } from 'react';
 import {
   View,
@@ -11,8 +12,10 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginScreen() {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,10 +29,10 @@ export default function LoginScreen() {
     setError('');
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      router.replace('/(tabs)');
+      await login(email.trim(), password);
+      // No hace falta navegar — el _layout.js detecta el cambio de user y redirige solo
     } catch (e) {
-      setError('Email o contraseña incorrectos.');
+      setError(e.message || 'Email o contraseña incorrectos.');
     } finally {
       setLoading(false);
     }
@@ -100,7 +103,7 @@ export default function LoginScreen() {
 
         <View style={styles.registerContainer}>
           <Text style={styles.registerText}>¿No tenés cuenta? </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/register')}>
             <Text style={styles.registerLink}>Registrate</Text>
           </TouchableOpacity>
         </View>
