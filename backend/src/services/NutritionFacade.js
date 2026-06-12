@@ -2,9 +2,8 @@
  * @fileoverview Fachada de Orquestación Nutricional (Versión ESM).
  */
 
-import {metricData} from '../data/metricData.js';
+import { metricData } from '../data/metricData.js';
 import { NormalState, RiskState, AlertState, HealthyEatingStrategy, LowWeightStrategy } from './index.js';
-//mport { HealthyEatingStrategy, LowWeightStrategy } from './strategies/index.js'; 
 
 class NutritionFacade {
     /**
@@ -25,7 +24,7 @@ class NutritionFacade {
 
             const clinicalState = this._resolveClinicalState(savedMetric);
             const interventionStrategy = this._resolveStrategy(clinicalState);
-            const interventionResult = interventionStrategy.execute(savedMetric, clinicalState);
+            const interventionResult = interventionStrategy.generateAdvice(null, savedMetric, clinicalState);
 
             return {
                 success: true,
@@ -35,15 +34,15 @@ class NutritionFacade {
                 },
                 patientId: savedMetric.patientId,
                 clinicalStatus: {
-                    state: clinicalState.getName(),
+                    state: clinicalState.constructor.name,
                     riskLevel: clinicalState.getRiskLevel(),
-                    requiresUrgentAction: clinicalState.isUrgent()
+                    requiresUrgentAction: clinicalState.requiresMedicalAttention()
                 },
                 treatmentPlan: {
-                    strategyApplied: interventionStrategy.getName(),
-                    dietaryGuidelines: interventionResult.guidelines,
-                    monitoringInterval: interventionResult.nextCheckIn,
-                    observations: interventionResult.notes
+                    strategyApplied: interventionStrategy.constructor.name,
+                    dietaryGuidelines: interventionResult.actionableAdvice,
+                    monitoringInterval: interventionResult.requiresFollowUp ? 'Corto plazo' : 'Control habitual',
+                    observations: interventionResult.medicalMessage
                 }
             };
         } catch (error) {
@@ -59,12 +58,11 @@ class NutritionFacade {
     }
 
     _resolveStrategy(state) {
-        if (state.isUrgent() || state.getRiskLevel() === 'HIGH') {
+        if (state.requiresMedicalAttention() || state.getRiskLevel() === 'Alto') {
             return new LowWeightStrategy();
         }
         return new HealthyEatingStrategy();
     }
 }
 
-// Exportación como Singleton compatible con ESM
 export default new NutritionFacade();
