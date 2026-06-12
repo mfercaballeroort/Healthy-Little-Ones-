@@ -10,30 +10,25 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: Colors.light.textSecondary,
         tabBarStyle: {
           backgroundColor: Colors.light.white,
-          borderTopColor: '#D4EDE1',
+          borderTopColor: '#B5D4F4',
           borderTopWidth: 1,
         },
       }}>
       <Tabs.Screen
         name="index"
-        options={{
-          title: 'Inicio',
-          tabBarIcon: ({ color }) => null,
-        }}
+        options={{ title: 'Inicio' }}
       />
       <Tabs.Screen
         name="patients"
-        options={{
-          title: 'Pacientes',
-          tabBarIcon: ({ color }) => null,
-        }}
+        options={{ title: 'Pacientes' }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{ title: 'Mapa' }}
       />
       <Tabs.Screen
         name="profile"
-        options={{
-          title: 'Perfil',
-          tabBarIcon: ({ color }) => null,
-        }}
+        options={{ title: 'Perfil' }}
       />
     </Tabs>
   );
