@@ -1,17 +1,26 @@
 // backend/src/routes/userRoutes.js
 import express from 'express';
-import { register, login, getAll, getById, update, remove } from '../controllers/userController.js';
+import {
+    register, login, me, getAll, getById, update, remove
+} from '../controllers/userController.js';
 import { validateUser, validateLogin } from '../middleware/validateUser.js';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import { authMiddleware, requireRole } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Rutas públicas
 router.post('/register', validateUser, register);
 router.post('/login', validateLogin, login);
-router.get('/', authMiddleware, getAll);
+
+// Rutas autenticadas
+router.get('/me', authMiddleware, me);
+
+// Listado solo para profesionales
+router.get('/', authMiddleware, requireRole('medico', 'nutricionista'), getAll);
+
+// Operaciones individuales — los permisos finos están en el controller
 router.get('/:id', authMiddleware, getById);
 router.put('/:id', authMiddleware, update);
 router.delete('/:id', authMiddleware, remove);
 
 export default router;
-

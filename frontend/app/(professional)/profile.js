@@ -1,8 +1,8 @@
-﻿import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 
-export default function ProfileScreen() {
+export default function ProfessionalProfileScreen() {
   const { user, logout } = useAuth();
 
   return (

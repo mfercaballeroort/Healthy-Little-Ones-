@@ -1,11 +1,11 @@
-﻿import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/theme';
 
-export default function PatientFormScreen() {
+export default function ProfessionalPatientsScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cargar paciente</Text>
-      <Text style={styles.subtitle}>Próximamente: formulario de carga</Text>
+      <Text style={styles.title}>Pacientes asignados</Text>
+      <Text style={styles.subtitle}>Próximamente: lista de pacientes a cargo</Text>
     </View>
   );
 }
