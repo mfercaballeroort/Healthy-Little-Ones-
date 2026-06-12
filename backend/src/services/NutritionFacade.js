@@ -5,7 +5,7 @@
 import { metricData } from '../data/metricData.js';
 import { 
     NormalState, RiskState, AlertState, 
-    HealthyEatingStrategy, LowWeightStrategy,
+    HealthyEatingStrategy, LowWeightStrategy,GrowthMonitoringStrategy,
     HistorialObserver, AlertObserver, ContenidoObserver
 } from './index.js';
 
@@ -80,11 +80,14 @@ class NutritionFacade {
     }
 
     _resolveStrategy(state) {
-        if (state.requiresMedicalAttention() || state.getRiskLevel() === 'Alto') {
-            return new LowWeightStrategy();
-        }
-        return new HealthyEatingStrategy();
+    if (state.requiresMedicalAttention()) {
+        return new LowWeightStrategy();
     }
+    if (state.getRiskLevel() === 'Moderado') {
+        return new GrowthMonitoringStrategy();
+    }
+    return new HealthyEatingStrategy();
+}
 }
 
 export default new NutritionFacade();
