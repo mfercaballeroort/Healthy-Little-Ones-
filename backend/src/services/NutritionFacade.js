@@ -3,16 +3,33 @@
  */
 
 import { metricData } from '../data/metricData.js';
-import { NormalState, RiskState, AlertState, HealthyEatingStrategy, LowWeightStrategy } from './index.js';
+import { 
+    NormalState, RiskState, AlertState, 
+    HealthyEatingStrategy, LowWeightStrategy,
+    HistorialObserver, AlertObserver, ContenidoObserver
+} from './index.js';
 
 class NutritionFacade {
-    /**
-     * Orquesta el flujo completo de evaluación, persistencia e intervención nutricional.
-     * @param {string} patientId - Identificador único del paciente.
-     * @param {number} weight - Peso actual en kg.
-     * @param {number} height - Talla actual en cm.
-     * @returns {Promise<Object>} DTO formateado.
-     */
+    constructor() {
+        this._observers = [
+            new HistorialObserver(),
+            new AlertObserver(),
+            new ContenidoObserver()
+        ];
+    }
+
+    subscribe(observer) {
+        this._observers.push(observer);
+    }
+
+    unsubscribe(observer) {
+        this._observers = this._observers.filter(o => o !== observer);
+    }
+
+    _notify(event, data) {
+        this._observers.forEach(observer => observer.update(event, data));
+    }
+
     async executeAssessment(patientId, weight, height) {
         try {
             const savedMetric = await metricData.save({
@@ -26,7 +43,7 @@ class NutritionFacade {
             const interventionStrategy = this._resolveStrategy(clinicalState);
             const interventionResult = interventionStrategy.generateAdvice(null, savedMetric, clinicalState);
 
-            return {
+            const result = {
                 success: true,
                 meta: {
                     metricId: savedMetric._id,
@@ -45,6 +62,11 @@ class NutritionFacade {
                     observations: interventionResult.medicalMessage
                 }
             };
+
+            this._notify('assessment:completed', result);
+
+            return result;
+
         } catch (error) {
             throw new Error(`[NutritionFacade Exception] Error en subsistema clínico: ${error.message}`);
         }
