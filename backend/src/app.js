@@ -18,6 +18,8 @@ app.use(express.json()); // Parsing de application/json
 // Rutas
 app.use('/api/patients', patientRoutes); // agregado 06/06
 app.use('/api/metrics', metricRoutes); // agregado 11/06
+app.use('/api/nutrition', nutritionRoutes);
+app.use('/api/users', userRoutes);
 
 // Middleware de manejo de errores centralizado (Capa Middleware)
 // app.use(errorHandler);
