@@ -17,6 +17,7 @@ app.use(express.json()); // Parsing de application/json
 // app.use('/api/v1', mainRouter);
 // Rutas
 app.use('/api/patients', patientRoutes); // agregado 06/06
+app.use('/api/metrics', metricRoutes); // agregado 11/06
 
 // Middleware de manejo de errores centralizado (Capa Middleware)
 // app.use(errorHandler);

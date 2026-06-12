@@ -2,9 +2,9 @@
  * @fileoverview Fachada de Orquestación Nutricional (Versión ESM).
  */
 
-import metricData from '../data/metricData.js';
+import {metricData} from '../data/metricData.js';
 import { NormalState, RiskState, AlertState, HealthyEatingStrategy, LowWeightStrategy } from './index.js';
-import { HealthyEatingStrategy, LowWeightStrategy } from './strategies/index.js'; 
+//mport { HealthyEatingStrategy, LowWeightStrategy } from './strategies/index.js'; 
 
 class NutritionFacade {
     /**
