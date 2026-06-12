@@ -3,7 +3,7 @@
  */
 
 import metricData from '../data/metricData.js';
-import { NormalState, RiskState, AlertState } from './states/index.js'; // O apuntando a cada archivo específico .js
+import { NormalState, RiskState, AlertState, HealthyEatingStrategy, LowWeightStrategy } from './index.js';
 import { HealthyEatingStrategy, LowWeightStrategy } from './strategies/index.js'; 
 
 class NutritionFacade {

@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import patientRoutes from './routes/patientRoutes.js'; // agregado 06/06
 import nutritionRoutes from './routes/nutritionRoutes.js'; // agregado 08/06
+import metricRoutes from './routes/metricRoutes.js'; // agregado 11/06
+import userRoutes from './routes/userRoutes.js';
 
 
 
