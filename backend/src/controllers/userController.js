@@ -77,7 +77,7 @@ export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = await userData.findByEmail(email);
+        const user = await userData.findByEmailWithPassword(email);
         if (!user) {
             // Mensaje genérico para no revelar si el email existe
             return res.status(401).json({ message: 'Credenciales inválidas' });

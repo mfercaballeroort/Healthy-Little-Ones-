@@ -10,6 +10,9 @@ const userData = {
     async findByEmail(email) {
         return await User.findOne({ email });
     },
+    async findByEmailWithPassword(email) {
+    return await User.findOne({ email }).lean();
+   },
 
     async findById(id) {
         return await User.findById(id);
