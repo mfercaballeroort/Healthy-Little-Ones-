@@ -144,6 +144,23 @@ export const getById = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+/**
+ * GET /api/users/professionals
+ * Devuelve médicos y nutricionistas (solo nombre/email/rol).
+ * Solo padres pueden listar para elegir a quién asignar.
+ */
+export const getProfessionals = async (req, res) => {
+  try {
+    if (req.user.role !== 'padre') {
+      return res.status(403).json({ message: 'Solo padres pueden consultar profesionales.' });
+    }
+    const medicos = await userData.findByRole('medico');
+    const nutricionistas = await userData.findByRole('nutricionista');
+    res.status(200).json({ medicos, nutricionistas });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
 
 /**
  * PUT /api/users/:id

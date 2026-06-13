@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,37 +7,56 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
+import { apiFetch } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 
-const MOCK_PATIENTS = [
-  { id: '1', name: 'Lucía Martínez', age: '3 años', weight: '13.2 kg', height: '94 cm', state: 'normal', initials: 'LM' },
-  { id: '2', name: 'Tomás Sánchez',  age: '5 años', weight: '17.8 kg', height: '105 cm', state: 'riesgo', initials: 'TS' },
-  { id: '3', name: 'Valentina Ruiz', age: '1 año',  weight: '9.1 kg',  height: '74 cm',  state: 'alerta', initials: 'VR' },
-];
+// Helper: calcula edad en años desde una fecha YYYY-MM-DD
+const calcAge = (birthDate) => {
+  if (!birthDate) return '';
+  const birth = new Date(birthDate);
+  const diff = Date.now() - birth.getTime();
+  const ageYears = Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
+  if (ageYears < 1) {
+    const months = Math.floor(diff / (30.44 * 24 * 60 * 60 * 1000));
+    return `${months} ${months === 1 ? 'mes' : 'meses'}`;
+  }
+  return `${ageYears} ${ageYears === 1 ? 'año' : 'años'}`;
+};
 
-const STATE_LABELS = { normal: 'Normal', riesgo: 'Riesgo', alerta: 'Alerta' };
+// Helper: iniciales del nombre
+const getInitials = (first, last) =>
+  `${first?.[0] ?? ''}${last?.[0] ?? ''}`.toUpperCase();
 
 export default function DashboardScreen() {
-  const [selected, setSelected] = useState(MOCK_PATIENTS[0]);
+  const { user } = useAuth();
+  const [patients, setPatients] = useState([]);
   const [aiText, setAiText] = useState('');
   const [loadingAI, setLoadingAI] = useState(false);
+  const [loadingList, setLoadingList] = useState(true);
 
-  const getStateStyle = (state) => {
-    switch (state) {
-      case 'normal': return styles.badgeNormal;
-      case 'riesgo': return styles.badgeRiesgo;
-      case 'alerta': return styles.badgeAlerta;
-    }
-  };
+  // Cargar pacientes cada vez que se vuelve a esta pantalla
+  useFocusEffect(
+    useCallback(() => {
+      const fetchPatients = async () => {
+        setLoadingList(true);
+        try {
+          const data = await apiFetch('/api/patients');
+          setPatients(data.data || []);
+        } catch (e) {
+          console.error('Error cargando pacientes:', e);
+        } finally {
+          setLoadingList(false);
+        }
+      };
+      fetchPatients();
+    }, [])
+  );
 
-  const getStateTextStyle = (state) => {
-    switch (state) {
-      case 'normal': return styles.badgeTextNormal;
-      case 'riesgo': return styles.badgeTextRiesgo;
-      case 'alerta': return styles.badgeTextAlerta;
-    }
-  };
+  const isParent = user?.role === 'padre';
+  const sectionLabel = isParent ? 'MIS HIJOS' : 'MIS PACIENTES';
+  const addButtonLabel = isParent ? '＋  Agregar hijo' : '＋  Agregar paciente';
 
   const analyzeWithAI = async (patient) => {
     setLoadingAI(true);
@@ -52,7 +71,7 @@ export default function DashboardScreen() {
           system: 'Sos un asistente de salud infantil. Respondé siempre en español, de forma breve, clara y amigable para padres. No reemplazás al médico.',
           messages: [{
             role: 'user',
-            content: `Paciente: ${patient.name}, ${patient.age}, peso ${patient.weight}, talla ${patient.height}, estado nutricional: ${patient.state}. Dame 2-3 consejos nutricionales concretos y breves.`,
+            content: `Paciente: ${patient.firstName} ${patient.lastName}, edad ${calcAge(patient.birthDate)}, sexo ${patient.gender}. Dame 2-3 consejos nutricionales generales y breves apropiados para esta edad.`,
           }],
         }),
       });
@@ -66,17 +85,15 @@ export default function DashboardScreen() {
     }
   };
 
-  const handleSelectPatient = (patient) => {
-    setSelected(patient);
-    setAiText('');
-  };
+  // Para el panel de IA usamos siempre el primer hijo de la lista
+  const firstChild = patients[0];
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Hola 👋</Text>
+          <Text style={styles.greeting}>Hola {user?.name?.split(' ')[0] ?? ''} 👋</Text>
           <Text style={styles.appName}>GrowSmart AI</Text>
         </View>
       </View>
@@ -84,62 +101,80 @@ export default function DashboardScreen() {
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => router.push('/patient-form')}>
-        <Text style={styles.addButtonText}>＋  Agregar paciente</Text>
+        <Text style={styles.addButtonText}>{addButtonLabel}</Text>
       </TouchableOpacity>
 
-      <Text style={styles.sectionTitle}>MIS PACIENTES</Text>
+      <Text style={styles.sectionTitle}>{sectionLabel}</Text>
 
-      {MOCK_PATIENTS.map(patient => (
-        <TouchableOpacity
-          key={patient.id}
-          style={[styles.patientCard, selected.id === patient.id && styles.patientCardSelected]}
-          onPress={() => handleSelectPatient(patient)}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{patient.initials}</Text>
-          </View>
-          <View style={styles.patientInfo}>
-            <Text style={styles.patientName}>{patient.name}</Text>
-            <Text style={styles.patientMeta}>{patient.age} · {patient.weight} · {patient.height}</Text>
-          </View>
-          <View style={[styles.badge, getStateStyle(patient.state)]}>
-            <Text style={[styles.badgeText, getStateTextStyle(patient.state)]}>
-              {STATE_LABELS[patient.state]}
-            </Text>
-          </View>
-          <Text style={styles.chevron}>›</Text>
-        </TouchableOpacity>
-      ))}
-
-      <View style={styles.aiSection}>
-        <Text style={styles.sectionTitle}>ANÁLISIS IA · {selected.name.split(' ')[0].toUpperCase()}</Text>
-        <View style={styles.aiCard}>
-          <View style={styles.aiHeader}>
-            <View style={styles.aiIcon}>
-              <Text style={styles.aiIconText}>🤖</Text>
-            </View>
-            <View>
-              <Text style={styles.aiTitle}>Estado nutricional</Text>
-              <Text style={styles.aiSubtitle}>Basado en los datos cargados</Text>
-            </View>
-          </View>
-          {aiText ? (
-            <Text style={styles.aiBody}>{aiText}</Text>
-          ) : (
-            <Text style={styles.aiPlaceholder}>
-              Tocá el botón para obtener un análisis personalizado con IA.
-            </Text>
-          )}
-          <TouchableOpacity
-            style={[styles.aiButton, loadingAI && styles.aiButtonDisabled]}
-            onPress={() => analyzeWithAI(selected)}
-            disabled={loadingAI}>
-            {loadingAI
-              ? <ActivityIndicator color="#fff" size="small" />
-              : <Text style={styles.aiButtonText}>Analizar con IA</Text>
-            }
-          </TouchableOpacity>
+      {loadingList ? (
+        <ActivityIndicator color={Colors.light.primary} style={{ marginVertical: Spacing.lg }} />
+      ) : patients.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyText}>
+            {isParent
+              ? 'Todavía no registraste a ningún hijo. Tocá "Agregar hijo" para empezar.'
+              : 'No tenés pacientes asignados todavía.'}
+          </Text>
         </View>
-      </View>
+      ) : (
+        patients.map(patient => (
+          <TouchableOpacity
+            key={patient._id}
+            style={styles.patientCard}
+            onPress={() =>
+              isParent
+                ? router.push(`/patient-edit/${patient._id}`)
+                : null
+            }
+            activeOpacity={isParent ? 0.7 : 1}
+          >
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{getInitials(patient.firstName, patient.lastName)}</Text>
+            </View>
+            <View style={styles.patientInfo}>
+              <Text style={styles.patientName}>{patient.firstName} {patient.lastName}</Text>
+              <Text style={styles.patientMeta}>
+                {calcAge(patient.birthDate)} · {patient.gender === 'F' ? 'Femenino' : 'Masculino'}
+              </Text>
+            </View>
+            {isParent && <Text style={styles.chevron}>›</Text>}
+          </TouchableOpacity>
+        ))
+      )}
+
+      {/* Panel de IA solo para padres con al menos un hijo */}
+      {isParent && firstChild && (
+        <View style={styles.aiSection}>
+          <Text style={styles.sectionTitle}>ANÁLISIS IA · {firstChild.firstName.toUpperCase()}</Text>
+          <View style={styles.aiCard}>
+            <View style={styles.aiHeader}>
+              <View style={styles.aiIcon}>
+                <Text style={styles.aiIconText}>🤖</Text>
+              </View>
+              <View>
+                <Text style={styles.aiTitle}>Consejos nutricionales</Text>
+                <Text style={styles.aiSubtitle}>Orientación general por edad</Text>
+              </View>
+            </View>
+            {aiText ? (
+              <Text style={styles.aiBody}>{aiText}</Text>
+            ) : (
+              <Text style={styles.aiPlaceholder}>
+                Tocá el botón para obtener consejos personalizados con IA.
+              </Text>
+            )}
+            <TouchableOpacity
+              style={[styles.aiButton, loadingAI && styles.aiButtonDisabled]}
+              onPress={() => analyzeWithAI(firstChild)}
+              disabled={loadingAI}>
+              {loadingAI
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={styles.aiButtonText}>Analizar con IA</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
     </ScrollView>
   );
@@ -155,21 +190,14 @@ const styles = StyleSheet.create({
   addButtonText: { color: Colors.light.white, fontSize: 15, fontWeight: '600' },
   sectionTitle: { fontSize: 11, fontWeight: '600', color: Colors.light.textSecondary, letterSpacing: 0.6, marginBottom: Spacing.sm },
   patientCard: { backgroundColor: Colors.light.white, borderRadius: BorderRadius.lg, borderWidth: 1, borderColor: '#B5D4F4', padding: Spacing.md, flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm, gap: Spacing.sm },
-  patientCardSelected: { borderColor: Colors.light.primary, borderWidth: 2 },
   avatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.light.backgroundPrimary, borderWidth: 1, borderColor: '#85B7EB', alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 12, fontWeight: '600', color: Colors.light.textPrimary },
   patientInfo: { flex: 1 },
   patientName: { fontSize: 13, fontWeight: '600', color: Colors.light.textPrimary },
   patientMeta: { fontSize: 11, color: Colors.light.textSecondary, marginTop: 2 },
-  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, borderWidth: 1 },
-  badgeText: { fontSize: 10, fontWeight: '600' },
-  badgeNormal: { backgroundColor: '#EBF5FD', borderColor: '#85B7EB' },
-  badgeRiesgo: { backgroundColor: '#FAEEDA', borderColor: '#FAC775' },
-  badgeAlerta: { backgroundColor: '#FCEBEB', borderColor: '#F09595' },
-  badgeTextNormal: { color: '#185FA5' },
-  badgeTextRiesgo: { color: '#854F0B' },
-  badgeTextAlerta: { color: '#A32D2D' },
   chevron: { fontSize: 18, color: '#85B7EB' },
+  emptyCard: { backgroundColor: Colors.light.white, borderRadius: BorderRadius.lg, borderWidth: 1, borderColor: '#B5D4F4', padding: Spacing.lg, alignItems: 'center' },
+  emptyText: { fontSize: 13, color: Colors.light.textSecondary, textAlign: 'center', lineHeight: 19 },
   aiSection: { marginTop: Spacing.lg },
   aiCard: { backgroundColor: Colors.light.white, borderRadius: BorderRadius.lg, borderWidth: 1, borderColor: '#85B7EB', padding: Spacing.md },
   aiHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm },
