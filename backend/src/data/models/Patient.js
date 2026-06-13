@@ -2,6 +2,12 @@ import { Schema, model } from 'mongoose';
 
 const patientSchema = new Schema(
   {
+    parentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'El paciente debe estar asociado a un padre.'],
+      index: true, // acelera las queries por parentId
+    },
     firstName: {
       type: String,
       required: [true, 'El nombre del paciente es obligatorio.'],

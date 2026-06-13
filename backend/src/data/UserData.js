@@ -17,6 +17,9 @@ const userData = {
     async findById(id) {
         return await User.findById(id);
     },
+    async findByRole(role) {
+    return await User.find({ role }).select('name email role').lean();
+    },
 
     async getAll() {
         return await User.find();

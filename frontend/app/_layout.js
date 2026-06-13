@@ -50,13 +50,30 @@ function RootLayoutNav() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="login" />
-      <Stack.Screen name="register" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="(professional)" />
-    </Stack>
-  );
+  <Stack screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="login" />
+    <Stack.Screen name="register" />
+    <Stack.Screen name="(tabs)" />
+    <Stack.Screen name="(professional)" />
+    <Stack.Screen
+      name="patient-form"
+      options={{
+        headerShown: true,
+        title: 'Cargar paciente',
+        headerBackTitle: 'Atrás',
+      }}
+    />
+      <Stack.Screen
+
+  name="patient-edit/[id]"
+  options={{
+    headerShown: true,
+    title: 'Editar hijo',
+    headerBackTitle: 'Atrás',
+  }}
+/>
+  </Stack>
+);
 }
 
 export default function RootLayout() {

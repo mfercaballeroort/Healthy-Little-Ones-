@@ -1,8 +1,6 @@
 // backend/src/routes/userRoutes.js
 import express from 'express';
-import {
-    register, login, me, getAll, getById, update, remove
-} from '../controllers/userController.js';
+import { register, login, me, getAll, getById, update, remove, getProfessionals } from '../controllers/userController.js';
 import { validateUser, validateLogin } from '../middleware/validateUser.js';
 import { authMiddleware, requireRole } from '../middleware/authMiddleware.js';
 
@@ -19,6 +17,7 @@ router.get('/me', authMiddleware, me);
 router.get('/', authMiddleware, requireRole('medico', 'nutricionista'), getAll);
 
 // Operaciones individuales — los permisos finos están en el controller
+router.get('/professionals', authMiddleware, getProfessionals);
 router.get('/:id', authMiddleware, getById);
 router.put('/:id', authMiddleware, update);
 router.delete('/:id', authMiddleware, remove);
