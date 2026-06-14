@@ -1,213 +1,295 @@
-# 🍼 Healthy Little Ones - Plataforma de Seguimiento Nutricional
+# 🌱 GrowSmart AI — Healthy Little Ones
 
-**Healthy Little Ones** es una aplicación móvil diseñada para la gestión, seguimiento y evaluación del estado nutricional pediátrico. El sistema combina criterio clínico con una arquitectura de software robusta, garantizando trazabilidad, precisión y escalabilidad de los datos médicos infantiles.
+Aplicación móvil de cribado nutricional pediátrico que combina los estándares oficiales de la **Organización Mundial de la Salud (OMS)** con orientación basada en inteligencia artificial, para acompañar a familias en el seguimiento del crecimiento de niñas y niños.
 
-## 🎯 Objetivo del Sistema
-
-Centralizar la historia clínica nutricional de pacientes pediátricos, automatizar el cálculo de requerimientos y emitir alertas tempranas sobre desviaciones en las curvas de crecimiento.
-
-## 🏗️ Arquitectura — Monorepo
-
-El proyecto está estructurado como un **Monorepo** utilizando **NPM Workspaces**.
-
-```text
-healthy-little-ones/
-├── package.json          ← package.json raíz (define los workspaces)
-├── node_modules/         ← TODAS las dependencias se instalan acá (hoisting)
-├── frontend/             ← React Native + Expo
-│   └── package.json      ← lista sus dependencias propias
-└── backend/              ← Node.js + Express + MongoDB
-    └── package.json      ← lista sus dependencias propias
-```
-
-### ¿Por qué un Monorepo?
-
-Elegimos esta estructura porque frontend y backend comparten el mismo dominio de negocio (nutrición pediátrica) y evolucionan juntos. Un monorepo nos permite:
-
-- Gestionar ambos proyectos desde un único repositorio sin duplicar configuración.
-- Coordinar cambios que afectan a ambas capas en un solo commit.
-- Mantener alta cohesión y bajo acoplamiento entre la capa de presentación y la lógica de negocio.
-
-### ¿Cómo funciona NPM Workspaces en este proyecto?
-
-El `package.json` de la raíz declara los workspaces:
-
-```json
-{
-  "workspaces": ["frontend", "backend"]
-}
-```
-
-Esto cambia el comportamiento de `npm install` en dos aspectos clave:
-
-**1. Hoisting de dependencias.** En vez de instalar dependencias duplicadas en `frontend/node_modules` y `backend/node_modules`, NPM **eleva** (hoists) todas las dependencias a un único `node_modules` en la raíz. Cuando Node.js busca un módulo (por ejemplo `require('express')` desde `backend/src/server.js`), recorre las carpetas hacia arriba hasta encontrar `node_modules`, y lo resuelve desde la raíz. Esto reduce el espacio en disco, acelera la instalación y garantiza versiones consistentes.
-
-**2. Comandos centralizados.** Todos los `npm install` deben ejecutarse desde la **raíz** del proyecto, no desde `frontend/` o `backend/`. Si se ejecuta `npm install` dentro de un workspace, se rompe el hoisting y aparecen errores de módulos faltantes.
-
-### Reglas de oro al trabajar con este monorepo
-
-- ✅ Correr `npm install` **siempre desde la raíz**.
-- ✅ Para agregar una dependencia a un workspace específico:
-  ```bash
-  npm install <paquete> --workspace=backend
-  npm install <paquete> --workspace=frontend
-  ```
-- ❌ Nunca ejecutar `npm install` desde adentro de `frontend/` o `backend/`.
-- ❌ Nunca crear manualmente `node_modules` dentro de un workspace.
-
-## 🎨 Patrones de Diseño Aplicados
-
-### Facade — `NutritionFacade`
-
-**¿Por qué?** El proceso de evaluación nutricional involucra múltiples subsistemas: persistencia de métricas, determinación del estado clínico, selección de estrategia de intervención y notificación a observers. Sin una Facade, el controller debería conocer y coordinar todos esos subsistemas directamente, generando alto acoplamiento.
-
-**Solución:** `NutritionFacade` expone un único método `executeAssessment(patientId, weight, height)` que orquesta internamente todo el flujo. El controller solo habla con la Facade.
-
-**Implementación como Singleton:** La Facade se exporta como instancia única (`export default new NutritionFacade()`) garantizando que la lista de observers y el estado interno sean compartidos globalmente.
+> **Disclaimer**: GrowSmart AI es una herramienta de cribado y orientación. No reemplaza la consulta con un profesional de la salud.
 
 ---
 
-### State — `NutritionState`
+## 🎯 ¿Qué resuelve?
 
-**¿Por qué?** El comportamiento del sistema varía según el estado nutricional del paciente. Sin State, tendríamos cadenas de `if/else` en múltiples lugares verificando el estado, lo que viola el principio Open/Closed.
+Los padres suelen tener dudas sobre el crecimiento de sus hijos pero no siempre acceden rápidamente a una consulta profesional. GrowSmart AI permite:
 
-**Solución:** Tres estados concretos que encapsulan su propio comportamiento:
-
-- `NormalState` → riesgo bajo, sin intervención urgente.
-- `RiskState` → riesgo moderado, requiere monitoreo.
-- `AlertState` → riesgo alto, requiere atención médica inmediata.
-
-Cada estado sabe responder `getRiskLevel()`, `getBaseMessage()` y `requiresMedicalAttention()` sin que la Facade necesite preguntar "¿en qué estado estás?".
+- Cargar mediciones de peso y talla y obtener una **evaluación nutricional inmediata** basada en los estándares OMS (Z-scores y percentilos).
+- Recibir **orientación clínica adaptada a la edad** del niño.
+- Encontrar **tiendas cercanas con alimentos específicos** (sin gluten, sin lactosa, etc.) según las necesidades del hijo.
+- Conectar al padre con **profesionales asignados** (médicos / nutricionistas) que pueden hacer seguimiento longitudinal.
 
 ---
 
-### Strategy — `NutritionStrategy`
+## 🏗️ Stack tecnológico
 
-**¿Por qué?** Las recomendaciones nutricionales varían según la condición del paciente. Si hardcodeamos la lógica de recomendación en la Facade, agregar un nuevo tipo de intervención requeriría modificar código existente.
+### Backend
+- **Node.js** + **Express** (ES Modules)
+- **MongoDB Atlas** con **Mongoose** (ODM)
+- **JWT** + **bcrypt** para autenticación
+- **GeoJSON + índices 2dsphere** para búsquedas geoespaciales
 
-**Solución:** Tres strategies intercambiables que la Facade selecciona en tiempo de ejecución:
+### Frontend
+- **React Native** + **Expo SDK 54**
+- **Expo Router** (file-based routing)
+- **expo-location** (API del dispositivo: geolocalización)
+- **expo-secure-store** (almacenamiento seguro de tokens)
+- **react-native-maps** (mapas nativos)
+- **react-native-chart-kit** + **react-native-svg** (gráficos)
 
-- `HealthyEatingStrategy` → para pacientes en estado Normal.
-- `GrowthMonitoringStrategy` → para pacientes en estado de Riesgo moderado.
-- `LowWeightStrategy` → para pacientes en estado de Alerta crítica.
+### APIs externas
+- **Claude API** (Anthropic) — orientación nutricional con IA
+- **Estándares OMS Child Growth Standards 2006** — tablas LMS oficiales
 
-La Facade puede cambiar la strategy sin que ningún otro componente lo sepa.
+### Organización del proyecto
+- **NPM Workspaces** (monorepo backend + frontend)
+- **Concurrently** para correr ambos servicios en paralelo
 
 ---
-
-### Observer — `NutritionObserver`
-
-**¿Por qué?** Cuando se completa una evaluación nutricional, múltiples sistemas deben reaccionar: registrar en el historial, emitir alertas, sugerir contenido educativo. Sin Observer, la Facade debería conocer y llamar explícitamente a cada uno de esos sistemas, generando dependencias rígidas.
-
-**Solución:** Tres observers concretos suscritos a la Facade:
-
-- `HistorialObserver` → registra cada evaluación en el historial del paciente.
-- `AlertObserver` → emite alerta crítica cuando el paciente requiere atención urgente.
-- `ContenidoObserver` → sugiere contenido educativo según el nivel de riesgo.
-
-La Facade llama `_notify('assessment:completed', result)` al finalizar y cada observer reacciona de forma independiente.
-
-## 🛠️ Stack Tecnológico
-
-| Capa | Tecnología |
-|------|-----------|
-| Mobile | React Native + Expo |
-| Backend | Node.js + Express |
-| Base de datos | MongoDB Atlas + Mongoose |
-| Monorepo | NPM Workspaces |
-| Orquestación dev | Concurrently |
-
-## 📋 Requisitos previos
-
-- **Node.js** v20 LTS o superior ([nodejs.org](https://nodejs.org)).
-- **NPM** v8 o superior (incluido con Node).
-- Cuenta en **MongoDB Atlas** con un cluster activo y la IP del entorno de desarrollo whitelistada en *Network Access*.
-- Para correr la app en el teléfono: app **Expo Go** instalada (Play Store / App Store) y el teléfono en la misma red WiFi que la PC.
-
-## ⚙️ Configuración inicial
-
-1. Clonar el repositorio:
-   ```bash
-   git clone <url-del-repo>
-   cd Healthy-Little-Ones-App
-   ```
-
-2. Crear el archivo `.env` dentro de `backend/` con las variables necesarias:
-   ```env
-   MONGO_URI=mongodb+srv://<usuario>:<password>@<cluster>.mongodb.net/<database>
-   PORT=5000
-   ```
-
-3. Instalar **todas** las dependencias desde la raíz (no desde los workspaces):
-   ```bash
-   npm install
-   ```
-
-   Este único comando instala las dependencias de `frontend/` y `backend/` en el `node_modules` de la raíz gracias al hoisting de workspaces.
 
 ## 🚀 Cómo correr el proyecto
 
-Todos los comandos se ejecutan desde la raíz del proyecto.
+### Requisitos previos
+- Node.js 18+ y npm
+- Acceso a un cluster MongoDB Atlas (o instancia local)
+- Para mobile: **Expo Go** instalado en el celular
+- Para web: navegador moderno
 
-### Correr ambos en paralelo (recomendado para desarrollo)
+### Instalación
+
+```bash
+git clone https://github.com/<usuario>/Healthy-Little-Ones-.git
+cd Healthy-Little-Ones-
+npm install
+```
+
+### Variables de entorno
+
+Crear `backend/.env` con:
+
+```env
+MONGO_URI=mongodb+srv://...        # cluster MongoDB Atlas
+JWT_SECRET=...                      # cadena aleatoria larga (48 bytes hex)
+JWT_EXPIRES_IN=7d
+INVITE_CODE_MEDICO=GROWSMART_MED_2026
+INVITE_CODE_NUTRICIONISTA=GROWSMART_NUT_2026
+PORT=5000
+```
+
+### Arranque
+
+Desde la raíz del monorepo, levanta ambos servicios en paralelo:
 
 ```bash
 npm run dev
 ```
 
-Esto usa **Concurrently** para arrancar backend y frontend al mismo tiempo en la misma terminal. Los logs aparecen prefijados con `[0]` (backend) y `[1]` (frontend).
+- Backend: `http://localhost:5000`
+- Frontend (Metro Bundler): `http://localhost:8081`
 
-### Correr solo el backend
+Para correr individualmente:
 
 ```bash
 npm run dev:backend
-```
-
-Levanta el servidor Express con Nodemon en `http://localhost:5000` y conecta a MongoDB Atlas.
-
-### Correr solo el frontend
-
-```bash
 npm run dev:frontend
 ```
 
-Inicia Metro Bundler de Expo en `http://localhost:8081`. Desde la terminal interactiva podés:
+### Datos iniciales (opcional)
 
-- Presionar `w` → abrir la app en el navegador.
-- Presionar `a` → abrir en emulador Android.
-- Presionar `i` → abrir en simulador iOS (solo Mac).
-- Escanear el **QR code** con la app **Expo Go** del teléfono.
-
-## 🐛 Troubleshooting
-
-### `Error: Cannot find module 'xxx'` al arrancar el backend
-
-Significa que el `node_modules` no se instaló correctamente. Causas comunes:
-
-1. Se ejecutó `npm install` desde adentro de `backend/` o `frontend/` en vez de la raíz.
-2. Hay un `node_modules` parcial dentro de algún workspace que rompe el hoisting.
-
-**Solución (reinstalación limpia desde la raíz):**
+Para poblar las tiendas de Buenos Aires:
 
 ```bash
-# Borrar todos los node_modules y lockfiles del monorepo
-cmd /c "rmdir /s /q node_modules"
-cmd /c "rmdir /s /q backend\node_modules"
-cmd /c "rmdir /s /q frontend\node_modules"
-rm package-lock.json backend/package-lock.json frontend/package-lock.json
-
-# Reinstalar desde la raíz
-npm install
+cd backend
+node src/seeds/seedStores.js
 ```
 
-### `Could not connect to any servers in your MongoDB Atlas cluster`
+---
 
-Tu IP no está whitelistada en Atlas. Ir a [cloud.mongodb.com](https://cloud.mongodb.com) → tu proyecto → **Network Access** → **Add IP Address** → **Allow Access from Anywhere** (`0.0.0.0/0`) para desarrollo, o **Add Current IP Address** para una IP específica.
+## 🏛️ Arquitectura
 
-### El frontend no se conecta al backend desde el teléfono
+El proyecto sigue una arquitectura **por capas** con **separación estricta de responsabilidades**.
 
-`localhost` en el teléfono se refiere al teléfono mismo, no a tu PC. Cambiar la URL base del backend en el código del frontend por la **IP local de tu PC** (ej: `http://192.168.1.42:5000`). Para obtenerla: `ipconfig` en Windows o `ifconfig` en Linux/Mac.
+### Backend
 
-### `Missing script: "dev"` en algún workspace
+```
+backend/src/
+├── routes/         # Mapeo URL ↔ controller
+├── controllers/    # Lógica HTTP (request/response)
+├── services/       # Lógica de dominio y patrones de diseño
+│   ├── NutritionFacade.js              # Facade + Singleton
+│   ├── interfaces/                     # NutritionState, NutritionStrategy, NutritionObserver
+│   ├── states/                         # NormalState, RiskState, AlertState
+│   ├── strategies/                     # HealthyEating, GrowthMonitoring, LowWeight
+│   │   └── shared/                     # Tablas de consejos por rango etario
+│   ├── observers/                      # Historial, Alert, Contenido
+│   └── whoStandards/                   # WhoGrowthService + tablas LMS OMS
+├── data/           # Repository Pattern (única capa que toca Mongo)
+│   └── models/     # Schemas y modelos Mongoose
+└── middleware/     # authMiddleware, requireRole, validate*
+```
 
-El workspace no tiene un script `dev` definido en su `package.json`. Verificar que tanto `frontend/package.json` como `backend/package.json` tengan la entrada `"dev"` en la sección `"scripts"`.
+### Frontend
+
+```
+frontend/app/
+├── (tabs)/                       # Tabs del PADRE (Inicio / Mapa / Perfil)
+├── (professional)/               # Tabs del PROFESIONAL (Inicio / Pacientes / Perfil)
+├── patient-form.js               # Crear hijo
+├── patient-edit/[id].js          # Editar hijo + asignar profesionales
+├── patient-assessment/[id].js    # Evaluación nutricional con OMS
+├── patient-history/[id].js       # Historial longitudinal (solo profesionales)
+├── login.js / register.js        # Auth
+└── _layout.js                    # Root layout: ruteo condicional por rol
+```
+
+---
+
+## 🧠 Patrones de diseño aplicados
+
+El subsistema de evaluación nutricional implementa **cinco patrones de diseño** trabajando en conjunto:
+
+| Patrón | Dónde | Función |
+|---|---|---|
+| **Singleton** | `NutritionFacade`, `WhoGrowthService` | Una sola instancia por proceso, compartida vía ES Module cache. |
+| **Facade** | `NutritionFacade.executeAssessment()` | Interfaz única que orquesta cálculo OMS + State + Strategy + Observers. El cliente HTTP solo llama un método. |
+| **State** | `NormalState`, `RiskState`, `AlertState` | El estado clínico del paciente determina su comportamiento. Cada State expone `getRiskLevel()`, `getBaseMessage()`, `requiresMedicalAttention()`. |
+| **Strategy** | `HealthyEatingStrategy`, `GrowthMonitoringStrategy`, `LowWeightStrategy` | Algoritmos intercambiables de recomendación clínica, seleccionados según el State. |
+| **Observer** | `HistorialObserver`, `AlertObserver`, `ContenidoObserver` | Suscriptores que reaccionan a cada evaluación completada. |
+
+### Flujo de una evaluación
+
+```
+POST /api/patients/:id/assessment { weight, height }
+        ↓
+patientController.createAssessment()
+        ↓
+nutritionFacade.executeAssessment()
+        ↓
+1. Cargar paciente desde DB
+2. Persistir métrica
+3. whoGrowthService.calculate() → Z-scores y percentilos OMS
+4. _resolveClinicalState() → State (Normal / Risk / Alert)
+5. _resolveStrategy(state) → Strategy correspondiente
+6. strategy.generateAdvice(child, metric, state) → recomendación adaptada por edad
+7. _notify('assessment:completed') → Observers reaccionan
+        ↓
+Response con clinicalStatus + treatmentPlan + whoAssessment
+```
+
+---
+
+## 🩺 Método clínico: estándares OMS
+
+La evaluación nutricional usa los **WHO Child Growth Standards 2006** mediante el **método LMS de Cole-Green**:
+
+- **L (lambda)** — skewness de la distribución
+- **M (mu)** — mediana esperada
+- **S (sigma)** — coeficiente de variación
+
+```
+Z = ((medición / M)^L - 1) / (L * S)    si L ≠ 0
+Z = ln(medición / M) / S                si L = 0
+```
+
+A partir del Z-score se calcula el percentilo aproximando la CDF de la distribución normal (Abramowitz & Stegun).
+
+### Indicadores implementados (0-60 meses)
+
+- **WFA** (Weight-for-Age) — peso para edad
+- **LHFA** (Length/Height-for-Age) — talla para edad
+- **BFA** (BMI-for-Age) — IMC para edad
+
+Los puntos de corte por Z-score siguen las recomendaciones OMS:
+
+| Z-score | Clasificación |
+|---|---|
+| Z < -3 | Severo (riesgo alto) |
+| -3 ≤ Z < -2 | Moderado (riesgo moderado) |
+| -2 ≤ Z ≤ +2 | Normal |
+| +2 < Z ≤ +3 | Sobrepeso / talla alta |
+| Z > +3 | Obesidad / talla muy alta |
+
+### Consejos clínicos por rango etario
+
+Los consejos están separados de la lógica de las Strategies usando **tablas de lookup** indexadas por seis rangos pediátricos:
+
+- Lactante exclusivo (0-6 meses)
+- Lactante con alimentación complementaria (6-12 meses)
+- Niño pequeño (1-2 años)
+- Preescolar (2-5 años)
+- Escolar (5-12 años)
+- Adolescente (12+ años)
+
+Esto implementa el **principio Open/Closed** (SOLID): agregar nuevos consejos o rangos no requiere modificar la lógica.
+
+---
+
+## 🔐 Autenticación y autorización
+
+- **JWT** firmado con secret, expiración configurable.
+- **bcrypt** para hashing de contraseñas.
+- **Tres roles**: `padre`, `medico`, `nutricionista`.
+- **Códigos de invitación** obligatorios para registrarse como profesional (médico y nutricionista usan códigos distintos, configurables vía `.env`).
+- **Autorización fina por recurso**:
+  - Padres ven solo sus hijos.
+  - Profesionales ven solo pacientes que les fueron asignados explícitamente por el padre.
+  - El padre asigna/desasigna profesionales desde la edición del hijo.
+- **Persistencia cross-platform** del token:
+  - **Mobile**: `expo-secure-store` (Keychain iOS / KeyStore Android, cifrado).
+  - **Web**: `window.localStorage`.
+
+---
+
+## 🌐 Endpoints principales
+
+| Método | Endpoint | Función |
+|---|---|---|
+| POST | `/api/users/register` | Registro (con código de invitación si es profesional) |
+| POST | `/api/users/login` | Login → devuelve `{ token, user }` |
+| GET | `/api/users/me` | Recuperar sesión a partir del token |
+| GET | `/api/users/professionals` | Lista médicos y nutricionistas (solo padres) |
+| GET | `/api/patients` | Mis hijos / mis pacientes según rol |
+| POST | `/api/patients` | Crear hijo (solo padres) |
+| GET | `/api/patients/:id` | Detalle de paciente |
+| PUT | `/api/patients/:id` | Editar paciente + asignaciones |
+| DELETE | `/api/patients/:id` | Eliminar hijo (solo padre dueño) |
+| POST | `/api/patients/:id/assessment` | Evaluación nutricional OMS |
+| GET | `/api/patients/:id/metrics` | Historial longitudinal (solo profesionales) |
+| GET | `/api/stores` | Todas las tiendas |
+| GET | `/api/stores/nearby?lat=X&lng=Y&specialties=...` | Tiendas cercanas filtradas |
+
+---
+
+## ✅ Requisitos del TP cumplidos
+
+- ✅ Autenticación con persistencia y roles
+- ✅ Más de tres vistas con ruteo y estado global (Context API + AuthProvider)
+- ✅ Conexión con APIs externas:
+  - Claude API (Anthropic) para orientación con IA
+  - Tablas LMS oficiales OMS para cálculo clínico
+- ✅ APIs del dispositivo:
+  - `expo-location` (geolocalización)
+  - `expo-secure-store` (almacenamiento seguro)
+- ✅ Múltiples patrones de diseño aplicados con responsabilidad clínica real
+
+---
+
+## 🛠️ Convenciones del proyecto
+
+- **Idioma**: UI y mensajes en español.
+- **Módulos**: ES Modules (`import` / `export`).
+- **Naming**: camelCase para variables/funciones, PascalCase para clases y componentes.
+- **Commits**: [Conventional Commits](https://www.conventionalcommits.org/) (`feat`, `fix`, `refactor`, `chore`, etc.).
+- **Endpoints**: prefijo `/api/<recurso>`.
+- **Path params** para recursos específicos (`/api/patients/:id`), **query params** para filtrado y búsqueda (`?lat=...&lng=...`).
+
+---
+
+## 📚 Referencias
+
+- World Health Organization. *WHO Child Growth Standards*. https://www.who.int/tools/child-growth-standards
+- Cole TJ. The LMS method for constructing normalized growth standards. *Eur J Clin Nutr*. 1990;44(1):45-60.
+- Sociedad Argentina de Pediatría — Guías de evaluación del crecimiento.
+- Anthropic. *Claude API documentation*. https://docs.claude.com
+
+---
+
+## 📄 Licencia
+
+Trabajo académico — Universidad ORT Argentina, 2026.

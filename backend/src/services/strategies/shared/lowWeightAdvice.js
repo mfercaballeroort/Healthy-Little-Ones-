@@ -1,18 +1,18 @@
 import { NutritionStrategy } from '../interfaces/NutritionStrategy.js';
 import { resolveAgeRange } from './shared/ageRanges.js';
-import { GROWTH_MONITORING_ADVICE } from './shared/growthMonitoringAdvice.js';
+import { LOW_WEIGHT_ADVICE } from './shared/lowWeightAdvice.js';
 
-export class GrowthMonitoringStrategy extends NutritionStrategy {
+export class LowWeightStrategy extends NutritionStrategy {
   generateAdvice(child, record, state) {
     const risk = state.getRiskLevel();
     const needsAttention = state.requiresMedicalAttention();
     const range = resolveAgeRange(child?.ageInMonths);
-    const tableEntry = GROWTH_MONITORING_ADVICE[range.id];
+    const tableEntry = LOW_WEIGHT_ADVICE[range.id];
 
-    const intervention = needsAttention ? tableEntry.urgent : tableEntry.monitoring;
+    const intervention = needsAttention ? tableEntry.urgent : tableEntry.intervention;
 
     return {
-      protocol: 'Monitoreo y Seguimiento del Crecimiento',
+      protocol: 'Recuperación Nutricional',
       ageRange: range.name,
       riskLevel: risk,
       actionableAdvice: intervention,
