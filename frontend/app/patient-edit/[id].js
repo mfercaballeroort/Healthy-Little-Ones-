@@ -211,7 +211,13 @@ export default function PatientEditScreen() {
           ))}
         </Picker>
       </View>
-
+      {/* Botón de evaluación nutricional */}
+      <TouchableOpacity
+        style={styles.assessmentBtn}
+        onPress={() => router.push(`/patient-assessment/${id}`)}
+      >
+        <Text style={styles.assessmentBtnText}>📊  Nueva medición / Evaluación</Text>
+      </TouchableOpacity>
       <TouchableOpacity
         style={[styles.saveBtn, saving && styles.btnDisabled]}
         onPress={handleSave}
@@ -299,4 +305,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deleteBtnText: { color: '#A32D2D', fontSize: 14, fontWeight: '600' },
+  assessmentBtn: {
+    backgroundColor: Colors.light.white,
+    borderWidth: 1,
+    borderColor: Colors.light.primary,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    alignItems: 'center',
+    marginTop: Spacing.lg,
+  },
+  assessmentBtnText: {
+    color: Colors.light.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });
