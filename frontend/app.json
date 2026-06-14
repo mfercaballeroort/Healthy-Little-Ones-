@@ -11,6 +11,14 @@
     "ios": {
       "supportsTablet": true
     },
+    "plugins": [
+  [
+    "expo-location",
+    {
+      "locationAlwaysAndWhenInUsePermission": "Healthy Little Ones necesita tu ubicación para mostrarte tiendas cercanas con productos adecuados para tu hijo."
+    }
+  ]
+  ],
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
