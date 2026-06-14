@@ -1,0 +1,51 @@
+{
+  "common": {
+    "appName": "GrowSmart AI",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "ok": "OK",
+    "required": "Required"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "registerTitle": "Create account",
+    "email": "Email",
+    "password": "Password",
+    "name": "Full name",
+    "role": "Account type",
+    "rolePadre": "Parent",
+    "roleMedico": "Doctor",
+    "roleNutricionista": "Nutritionist",
+    "inviteCode": "Invitation code",
+    "loginButton": "Sign in",
+    "registerButton": "Register",
+    "noAccount": "Don't have an account? Register",
+    "haveAccount": "Already have an account? Sign in",
+    "invalidCredentials": "Invalid credentials",
+    "missingFields": "Please fill in all fields."
+  },
+  "dashboard": {
+    "greeting": "Hello {{name}}",
+    "myChildren": "MY CHILDREN",
+    "myPatients": "MY PATIENTS",
+    "addChild": "＋  Add child",
+    "addPatient": "＋  Add patient",
+    "noChildrenYet": "You haven't registered any children yet. Tap \"Add child\" to start.",
+    "noPatientsYet": "You don't have any assigned patients yet."
+  },
+  "settings": {
+    "language": "Language",
+    "spanish": "Español",
+    "english": "English",
+    "arabic": "العربية",
+    "logout": "Sign out",
+    "profile": "Profile",
+    "role": "Role"
+  }
+}

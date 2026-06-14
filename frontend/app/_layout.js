@@ -1,4 +1,5 @@
 // frontend/app/_layout.js
+import '@/i18n';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';

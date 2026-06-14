@@ -1,0 +1,51 @@
+{
+  "common": {
+    "appName": "GrowSmart AI",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "back": "رجوع",
+    "loading": "جارٍ التحميل...",
+    "error": "خطأ",
+    "success": "تم بنجاح",
+    "ok": "موافق",
+    "required": "إلزامي"
+  },
+  "auth": {
+    "loginTitle": "تسجيل الدخول",
+    "registerTitle": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "name": "الاسم الكامل",
+    "role": "نوع الحساب",
+    "rolePadre": "ولي الأمر",
+    "roleMedico": "طبيب",
+    "roleNutricionista": "أخصائي تغذية",
+    "inviteCode": "رمز الدعوة",
+    "loginButton": "دخول",
+    "registerButton": "تسجيل",
+    "noAccount": "ليس لديك حساب؟ سجّل الآن",
+    "haveAccount": "لديك حساب بالفعل؟ سجّل دخولك",
+    "invalidCredentials": "بيانات الاعتماد غير صحيحة",
+    "missingFields": "يرجى تعبئة جميع الحقول."
+  },
+  "dashboard": {
+    "greeting": "مرحباً {{name}}",
+    "myChildren": "أطفالي",
+    "myPatients": "مرضاي",
+    "addChild": "＋ إضافة طفل",
+    "addPatient": "＋ إضافة مريض",
+    "noChildrenYet": "لم تسجّل أي طفل بعد. اضغط على \"إضافة طفل\" للبدء.",
+    "noPatientsYet": "لا يوجد لديك مرضى مُحالون بعد."
+  },
+  "settings": {
+    "language": "اللغة",
+    "spanish": "Español",
+    "english": "English",
+    "arabic": "العربية",
+    "logout": "تسجيل الخروج",
+    "profile": "الملف الشخصي",
+    "role": "الدور"
+  }
+}
