@@ -1,5 +1,7 @@
 import { patientData } from '../data/patientData.js';
+import { metricData } from '../data/metricData.js';
 import nutritionFacade from '../services/NutritionFacade.js';
+import whoGrowthService from '../services/whoStandards/WhoGrowthService.js';
 
 // Helper: chequea si el usuario logueado puede acceder a este paciente
 const canAccess = (user, patient) => {
@@ -13,6 +15,15 @@ const canAccess = (user, patient) => {
     return patient.assignedNutritionistId?.toString() === user._id.toString();
   }
   return false;
+};
+
+// Helper: calcula edad en meses en un momento específico
+const ageInMonthsAt = (birthDate, atDate) => {
+  if (!birthDate) return 0;
+  const birth = new Date(birthDate);
+  const at = new Date(atDate);
+  const diffMs = at.getTime() - birth.getTime();
+  return Math.floor(diffMs / (30.44 * 24 * 60 * 60 * 1000));
 };
 
 /**
@@ -31,7 +42,7 @@ export const createPatient = async (req, res) => {
     const { firstName, lastName, birthDate, gender, guardian, observations } = req.body;
 
     const patient = await patientData.save({
-      parentId: req.user._id, // ← del token, no del body (seguridad)
+      parentId: req.user._id,
       firstName,
       lastName,
       birthDate,
@@ -48,8 +59,6 @@ export const createPatient = async (req, res) => {
 
 /**
  * GET /api/patients
- * Padre → ve solo sus hijos.
- * Profesional → ve todos (en el Paso 4 se restringirá a assignedPatients).
  */
 export const getAllPatients = async (req, res) => {
   try {
@@ -101,7 +110,6 @@ export const updatePatient = async (req, res) => {
     const { firstName, lastName, birthDate, gender, guardian, observations } = req.body;
     const updateData = { firstName, lastName, birthDate, gender, guardian, observations };
 
-    // Solo el padre puede cambiar las asignaciones
     if (req.user.role === 'padre') {
       if ('assignedDoctorId' in req.body) updateData.assignedDoctorId = req.body.assignedDoctorId || null;
       if ('assignedNutritionistId' in req.body) updateData.assignedNutritionistId = req.body.assignedNutritionistId || null;
@@ -116,7 +124,6 @@ export const updatePatient = async (req, res) => {
 
 /**
  * DELETE /api/patients/:id
- * Solo el padre dueño puede borrar a su hijo.
  */
 export const deletePatient = async (req, res) => {
   try {
@@ -154,5 +161,66 @@ export const createAssessment = async (req, res) => {
     return res.status(201).json(result);
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /api/patients/:id/metrics
+ * Devuelve el historial longitudinal del paciente.
+ * Cada métrica viene enriquecida con el cálculo OMS correspondiente a la edad en ese momento.
+ * Solo accesible para profesionales asignados (el padre ve evaluaciones puntuales, no la trayectoria).
+ */
+export const getPatientHistory = async (req, res) => {
+  try {
+    const patient = await patientData.findById(req.params.id);
+    if (!patient) {
+      return res.status(404).json({ success: false, message: 'Paciente no encontrado.' });
+    }
+    if (!canAccess(req.user, patient)) {
+      return res.status(403).json({ success: false, message: 'No tenés permiso para ver este historial.' });
+    }
+
+    // Decisión de UX: el historial detallado es solo para profesionales
+    if (req.user.role === 'padre') {
+      return res.status(403).json({
+        success: false,
+        message: 'El historial detallado está disponible solo para los profesionales asignados.',
+      });
+    }
+
+    const metrics = await metricData.findByPatientId(req.params.id);
+
+    // Enriquecer cada métrica con Z-scores calculados según la edad EN ESE MOMENTO
+    const enrichedMetrics = metrics.map(m => {
+      const ageMonths = ageInMonthsAt(patient.birthDate, m.date);
+      const whoResult = whoGrowthService.calculate({
+        sex: patient.gender,
+        ageMonths,
+        weight: m.weight,
+        height: m.height,
+      });
+      return {
+        _id: m._id,
+        date: m.date,
+        weight: m.weight,
+        height: m.height,
+        ageMonths,
+        who: whoResult,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      patient: {
+        _id: patient._id,
+        firstName: patient.firstName,
+        lastName: patient.lastName,
+        birthDate: patient.birthDate,
+        gender: patient.gender,
+      },
+      data: enrichedMetrics,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

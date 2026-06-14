@@ -50,30 +50,45 @@ function RootLayoutNav() {
   }
 
   return (
-  <Stack screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="login" />
-    <Stack.Screen name="register" />
-    <Stack.Screen name="(tabs)" />
-    <Stack.Screen name="(professional)" />
-    <Stack.Screen
-      name="patient-form"
-      options={{
-        headerShown: true,
-        title: 'Cargar paciente',
-        headerBackTitle: 'Atrás',
-      }}
-    />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="login" />
+      <Stack.Screen name="register" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(professional)" />
       <Stack.Screen
-
-  name="patient-edit/[id]"
+        name="patient-form"
+        options={{
+          headerShown: true,
+          title: 'Cargar paciente',
+          headerBackTitle: 'Atrás',
+        }}
+      />
+      <Stack.Screen
+        name="patient-edit/[id]"
+        options={{
+          headerShown: true,
+          title: 'Editar hijo',
+          headerBackTitle: 'Atrás',
+        }}
+      />
+      <Stack.Screen
+        name="patient-assessment/[id]"
+        options={{
+          headerShown: true,
+          title: 'Evaluación nutricional',
+          headerBackTitle: 'Atrás',
+        }}
+      />
+      <Stack.Screen
+  name="patient-history/[id]"
   options={{
     headerShown: true,
-    title: 'Editar hijo',
+    title: 'Historial clínico',
     headerBackTitle: 'Atrás',
   }}
 />
-  </Stack>
-);
+    </Stack>
+  );
 }
 
 export default function RootLayout() {

@@ -7,11 +7,11 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/services/api';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
-
+import { router, useFocusEffect } from 'expo-router';
 // Helper: calcula edad en años desde una fecha YYYY-MM-DD
 const calcAge = (birthDate) => {
   if (!birthDate) return '';
@@ -73,7 +73,12 @@ export default function ProfessionalHome() {
         </View>
       ) : (
         patients.map(patient => (
-          <TouchableOpacity key={patient._id} style={styles.patientCard} activeOpacity={0.7}>
+  <TouchableOpacity
+    key={patient._id}
+    style={styles.patientCard}
+    activeOpacity={0.7}
+    onPress={() => router.push(`/patient-history/${patient._id}`)}
+  >
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{getInitials(patient.firstName, patient.lastName)}</Text>
             </View>
