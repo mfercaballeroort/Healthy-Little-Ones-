@@ -4,7 +4,7 @@ import patientRoutes from './routes/patientRoutes.js'; // agregado 06/06
 import nutritionRoutes from './routes/nutritionRoutes.js'; // agregado 08/06
 import metricRoutes from './routes/metricRoutes.js'; // agregado 11/06
 import userRoutes from './routes/userRoutes.js';
-
+import storeRoutes from './routes/storeRoutes.js';
 
 
 const app = express();
@@ -12,7 +12,7 @@ const app = express();
 // Middlewares globales
 app.use(cors());// conecta backend con frontend
 app.use(express.json()); // Parsing de application/json
-
+app.use('/api/stores', storeRoutes);
 // Aquí inyectaremos el router principal más adelante (Capa Routes)
 // app.use('/api/v1', mainRouter);
 // Rutas
