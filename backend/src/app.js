@@ -5,7 +5,7 @@ import nutritionRoutes from './routes/nutritionRoutes.js'; // agregado 08/06
 import metricRoutes from './routes/metricRoutes.js'; // agregado 11/06
 import userRoutes from './routes/userRoutes.js';
 import storeRoutes from './routes/storeRoutes.js';
-
+import aiRoutes from './routes/aiRoutes.js'; // agregado: orientación nutricional con IA
 
 const app = express();
 
@@ -20,6 +20,7 @@ app.use('/api/patients', patientRoutes); // agregado 06/06
 app.use('/api/metrics', metricRoutes); // agregado 11/06
 app.use('/api/nutrition', nutritionRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Middleware de manejo de errores centralizado (Capa Middleware)
 // app.use(errorHandler);
