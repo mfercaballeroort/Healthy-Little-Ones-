@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -191,6 +192,8 @@ export default function PatientEditScreen() {
         <Picker
           selectedValue={form.assignedDoctorId}
           onValueChange={(v) => updateField('assignedDoctorId', v)}
+          style={styles.picker}
+          itemStyle={styles.pickerItem}
         >
           <Picker.Item label="— Sin asignar —" value="" />
           {medicos.map(m => (
@@ -204,6 +207,8 @@ export default function PatientEditScreen() {
         <Picker
           selectedValue={form.assignedNutritionistId}
           onValueChange={(v) => updateField('assignedNutritionistId', v)}
+          style={styles.picker}
+          itemStyle={styles.pickerItem}
         >
           <Picker.Item label="— Sin asignar —" value="" />
           {nutricionistas.map(n => (
@@ -211,6 +216,7 @@ export default function PatientEditScreen() {
           ))}
         </Picker>
       </View>
+
       {/* Botón de evaluación nutricional */}
       <TouchableOpacity
         style={styles.assessmentBtn}
@@ -277,6 +283,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#B5D4F4',
     overflow: 'hidden',
+  },
+  picker: {
+    height: Platform.OS === 'ios' ? 180 : 50,
+    width: '100%',
+  },
+  pickerItem: {
+    fontSize: 16,
+    color: Colors.light.textPrimary,
+    height: 180,
   },
   saveBtn: {
     backgroundColor: Colors.light.primary,
