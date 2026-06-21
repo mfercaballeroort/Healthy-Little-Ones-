@@ -58,33 +58,23 @@ export default function DashboardScreen() {
   const sectionLabel = isParent ? 'MIS HIJOS' : 'MIS PACIENTES';
   const addButtonLabel = isParent ? '＋  Agregar hijo' : '＋  Agregar paciente';
 
-  const analyzeWithAI = async (patient) => {
+ const analyzeWithAI = async (patient) => {
     setLoadingAI(true);
     setAiText('');
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // La llamada a la API de Anthropic vive en el backend (api/ai/orientation),
+      // nunca acá: la API key no puede estar en el código del cliente.
+      const response = await apiFetch('/api/ai/orientation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 300,
-          system: 'Sos un asistente de salud infantil. Respondé siempre en español, de forma breve, clara y amigable para padres. No reemplazás al médico.',
-          messages: [{
-            role: 'user',
-            content: `Paciente: ${patient.firstName} ${patient.lastName}, edad ${calcAge(patient.birthDate)}, sexo ${patient.gender}. Dame 2-3 consejos nutricionales generales y breves apropiados para esta edad.`,
-          }],
-        }),
+        body: { patientId: patient._id },
       });
-      const data = await response.json();
-      const text = data.content?.[0]?.text ?? 'No se pudo obtener análisis.';
-      setAiText(text);
-    } catch {
-      setAiText('Error al conectar con el servicio de IA.');
+      setAiText(response.data?.text ?? 'No se pudo obtener análisis.');
+    } catch (e) {
+      setAiText(e.message || 'Error al conectar con el servicio de IA.');
     } finally {
       setLoadingAI(false);
     }
   };
-
   // Para el panel de IA usamos siempre el primer hijo de la lista
   const firstChild = patients[0];
 
@@ -157,7 +147,12 @@ export default function DashboardScreen() {
               </View>
             </View>
             {aiText ? (
-              <Text style={styles.aiBody}>{aiText}</Text>
+              <>
+                <Text style={styles.aiBody}>{aiText}</Text>
+                <Text style={styles.aiDisclaimer}>
+                  ⚠️ Orientación general generada por IA. No reemplaza la consulta con un profesional de la salud.
+                </Text>
+              </>
             ) : (
               <Text style={styles.aiPlaceholder}>
                 Tocá el botón para obtener consejos personalizados con IA.
@@ -207,6 +202,7 @@ const styles = StyleSheet.create({
   aiSubtitle: { fontSize: 11, color: Colors.light.textSecondary },
   aiPlaceholder: { fontSize: 12, color: Colors.light.textSecondary, marginBottom: Spacing.md, lineHeight: 18 },
   aiBody: { fontSize: 12, color: Colors.light.textPrimary, lineHeight: 19, marginBottom: Spacing.md },
+  aiDisclaimer: { fontSize: 10, color: Colors.light.textSecondary, fontStyle: 'italic', lineHeight: 14, marginBottom: Spacing.md },
   aiButton: { backgroundColor: Colors.light.primary, borderRadius: BorderRadius.md, padding: Spacing.sm, alignItems: 'center' },
   aiButtonDisabled: { opacity: 0.7 },
   aiButtonText: { color: Colors.light.white, fontSize: 13, fontWeight: '600' },
