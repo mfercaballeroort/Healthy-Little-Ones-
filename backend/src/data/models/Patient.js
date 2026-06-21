@@ -42,6 +42,21 @@ const patientSchema = new Schema(
       trim: true,
       maxLength: [500, 'Las observaciones no pueden superar los 500 caracteres.'],
     },
+    assignedDoctorId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    assignedNutritionistId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    observations: {
+      type: String,
+      trim: true,
+      maxLength: [500, 'Las observaciones no pueden superar los 500 caracteres.'],
+    },
   },
   {
     timestamps: true,
